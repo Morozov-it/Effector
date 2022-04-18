@@ -1,4 +1,4 @@
-import {createStore, createEvent} from 'effector'
+import { createStore, createEvent, createEffect } from 'effector'
 
 export interface Todo {
   id: number;
@@ -35,21 +35,31 @@ const addTodoToList = (todos: Todo[], text: string): Todo[] => [
 //модель хранилища
 type Store = {
   todos: Todo[],
-  newTodo: string
+  newTodo: string,
+  loading: boolean,
+  error: string | null,
 }
 
-//события
+//синхронные события
 export const setNewTodo = createEvent<string>()
 export const addTodo = createEvent()
 export const updateTodo = createEvent<{ id: number, text: string }>()
 export const toggleTodo = createEvent<number>()
 export const removeTodo = createEvent<number>()
 
+//асинхронные действия
+export const loadTodos = createEffect(async (url: string) => {
+  const req = await fetch(url)
+  return req.json()
+})
+
 //хранилище
 export default createStore<Store>({
   //исходное состояние
   todos: [],
-  newTodo: ''
+  newTodo: '',
+  loading: false,
+  error: null
 })
   //actions
   .on(setNewTodo, (state, newTodo) => ({
@@ -72,4 +82,17 @@ export default createStore<Store>({
   .on(removeTodo, (state, id) => ({
     ...state,
     todos: removeOneTodo(state.todos, id)
+  }))
+  //асинхронные слушатели
+  .on(loadTodos.doneData, (state, todos) => ({
+    ...state,
+    todos
+  }))
+  .on(loadTodos.pending, (state, loading) => ({
+    ...state,
+    loading
+  }))
+  .on(loadTodos.failData, (state, error) => ({
+    ...state,
+    error: error.message
   }));
