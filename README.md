@@ -1,1 +1,1 @@
-Base project for the Todo state manager series
+Todo app via Effector

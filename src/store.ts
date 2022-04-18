@@ -7,19 +7,19 @@ export interface Todo {
 }
 
 // Standard interface and functions
-const updateTodo = (todos: Todo[], id: number, text: string): Todo[] =>
+const updateOneTodo = (todos: Todo[], id: number, text: string): Todo[] =>
   todos.map((todo) => ({
     ...todo,
     text: todo.id === id ? text : todo.text,
   }));
 
-const toggleTodo = (todos: Todo[], id: number): Todo[] =>
+const toggleOneTodo = (todos: Todo[], id: number): Todo[] =>
   todos.map((todo) => ({
     ...todo,
     done: todo.id === id ? !todo.done : todo.done,
   }));
 
-const removeTodo = (todos: Todo[], id: number): Todo[] =>
+const removeOneTodo = (todos: Todo[], id: number): Todo[] =>
   todos.filter((todo) => todo.id !== id);
 
 const addTodoToList = (todos: Todo[], text: string): Todo[] => [
@@ -32,7 +32,6 @@ const addTodoToList = (todos: Todo[], text: string): Todo[] => [
 ];
 
 //Effector state implementation
-
 //модель хранилища
 type Store = {
   todos: Todo[],
@@ -40,11 +39,14 @@ type Store = {
 }
 
 //события
-const setNewTodo = createEvent<string>()
-const addTodo = createEvent()
+export const setNewTodo = createEvent<string>()
+export const addTodo = createEvent()
+export const updateTodo = createEvent<{ id: number, text: string }>()
+export const toggleTodo = createEvent<number>()
+export const removeTodo = createEvent<number>()
 
 //хранилище
-const store = createStore<Store>({
+export default createStore<Store>({
   //исходное состояние
   todos: [],
   newTodo: ''
@@ -59,3 +61,15 @@ const store = createStore<Store>({
     newTodo: '',
     todos: addTodoToList(state.todos, state.newTodo)
   }))
+  .on(updateTodo, (state, { id, text }) => ({
+    ...state,
+    todos: updateOneTodo(state.todos, id, text)
+  }))
+  .on(toggleTodo, (state, id) => ({
+    ...state,
+    todos: toggleOneTodo(state.todos, id)
+  }))
+  .on(removeTodo, (state, id) => ({
+    ...state,
+    todos: removeOneTodo(state.todos, id)
+  }));
